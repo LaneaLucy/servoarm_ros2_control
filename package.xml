@@ -1,18 +1,19 @@
 <?xml version="1.0"?>
 <package format="3">
-    <name>topic_based_ros2_control</name>
+    <name>servoarm_ros2_control</name>
     <version>0.2.0</version>
-    <description>ros2 control hardware interface for topic_based sim</description>
+    <description>ros2 control hardware interface for uros-esp32-6-servos</description>
 
+    <maintainer email="lanealucy@gmail.com">Lanea Lucy S.</maintainer>
     <maintainer email="marq.razz@gmail.com">Marq Rasmussen</maintainer>
     <maintainer email="jafar@picknik.ai">Jafar</maintainer>
     <author email="jafar@picknik.ai">Jafar</author>
 
     <license>BSD</license>
 
-    <url type="website">https://github.com/PickNikRobotics/topic_based_ros2_control</url>
-    <url type="bugtracker">https://github.com/PickNikRobotics/topic_based_ros2_control/issues</url>
-    <url type="repository">https://github.com/PickNikRobotics/topic_based_ros2_control/</url>
+    <url type="website">https://github.com/LaneaLucy/servoarm_ros2_control</url>
+    <url type="bugtracker">https://github.com/LaneaLucy/servoarm_ros2_control/issues</url>
+    <url type="repository">https://github.com/LaneaLucy/servoarm_ros2_control</url>
 
     <buildtool_depend>ament_cmake</buildtool_depend>s
 

@@ -37,7 +37,7 @@
 
 #include <angles/angles.h>
 #include <rclcpp/executors.hpp>
-#include <topic_based_ros2_control/topic_based_system.hpp>
+#include <servoarm_ros2_control/topic_based_system.hpp>
 
 namespace
 {
@@ -53,7 +53,7 @@ void sumRotationFromMinus2PiTo2Pi(const double current_wrapped_rad, double& tota
 }
 }  // namespace
 
-namespace topic_based_ros2_control
+namespace servoarm_ros2_control
 {
 
 static constexpr std::size_t POSITION_INTERFACE_INDEX = 0;
@@ -135,7 +135,7 @@ CallbackReturn TopicBasedSystem::on_init(const hardware_interface::HardwareInfo&
 
   // Add random ID to prevent warnings about multiple publishers within the same node
   rclcpp::NodeOptions options;
-  options.arguments({ "--ros-args", "-r", "__node:=topic_based_ros2_control_" + info_.name });
+  options.arguments({ "--ros-args", "-r", "__node:=servoarm_ros2_control_" + info_.name });
 
   node_ = rclcpp::Node::make_shared("_", options);
 
@@ -144,11 +144,13 @@ CallbackReturn TopicBasedSystem::on_init(const hardware_interface::HardwareInfo&
     trigger_joint_command_threshold_ = std::stod(it->second);
   }
 
-  topic_based_joint_commands_publisher_ = node_->create_publisher<sensor_msgs::msg::JointState>(
-      get_hardware_parameter("joint_commands_topic", "/robot_joint_commands"), rclcpp::QoS(1));
-  topic_based_joint_states_subscriber_ = node_->create_subscription<sensor_msgs::msg::JointState>(
-      get_hardware_parameter("joint_states_topic", "/robot_joint_states"), rclcpp::SensorDataQoS(),
-      [this](const sensor_msgs::msg::JointState::SharedPtr joint_state) { latest_joint_state_ = *joint_state; });
+  topic_based_joint_commands_publisher_ = node_->create_publisher<std_msgs::msg::Float32MultiArray>(
+      "/microROS/servos", rclcpp::QoS(1));
+  // topic_based_joint_commands_publisher_ = node_->create_publisher<sensor_msgs::msg::JointState>(
+  //     get_hardware_parameter("joint_commands_topic", "/robot_joint_commands"), rclcpp::QoS(1));
+  // topic_based_joint_states_subscriber_ = node_->create_subscription<sensor_msgs::msg::JointState>(
+  //     get_hardware_parameter("joint_states_topic", "/robot_joint_states"), rclcpp::SensorDataQoS(),
+  //     [this](const sensor_msgs::msg::JointState::SharedPtr joint_state) { latest_joint_state_ = *joint_state; });
 
   // if the values on the `joint_states_topic` are wrapped between -2*pi and 2*pi (like they are in Isaac Sim)
   // sum the total joint rotation returned on the `joint_states_` interface
@@ -276,25 +278,28 @@ hardware_interface::return_type TopicBasedSystem::write(const rclcpp::Time& /*ti
   }
 
   sensor_msgs::msg::JointState joint_state;
+  std_msgs::msg::Float32MultiArray servo_msg;
   for (std::size_t i = 0; i < info_.joints.size(); ++i)
   {
     joint_state.name.push_back(info_.joints[i].name);
-    joint_state.header.stamp = node_->now();
+    // joint_state.header.stamp = node_->now();
+
     // only send commands to the interfaces that are defined for this joint
     for (const auto& interface : info_.joints[i].command_interfaces)
     {
       if (interface.name == hardware_interface::HW_IF_POSITION)
       {
         joint_state.position.push_back(joint_commands_[POSITION_INTERFACE_INDEX][i]);
+        servo_msg.data.push_back(joint_commands_[POSITION_INTERFACE_INDEX][i]);
       }
-      else if (interface.name == hardware_interface::HW_IF_VELOCITY)
-      {
-        joint_state.velocity.push_back(joint_commands_[VELOCITY_INTERFACE_INDEX][i]);
-      }
-      else if (interface.name == hardware_interface::HW_IF_EFFORT)
-      {
-        joint_state.effort.push_back(joint_commands_[EFFORT_INTERFACE_INDEX][i]);
-      }
+      // else if (interface.name == hardware_interface::HW_IF_VELOCITY)
+      // {
+      //   joint_state.velocity.push_back(joint_commands_[VELOCITY_INTERFACE_INDEX][i]);
+      // }
+      // else if (interface.name == hardware_interface::HW_IF_EFFORT)
+      // {
+      //   joint_state.effort.push_back(joint_commands_[EFFORT_INTERFACE_INDEX][i]);
+      // }
       else
       {
         RCLCPP_WARN_ONCE(node_->get_logger(), "Joint '%s' has unsupported command interfaces found: %s.",
@@ -311,28 +316,32 @@ hardware_interface::return_type TopicBasedSystem::write(const rclcpp::Time& /*ti
       {
         joint_state.position[mimic_joint.joint_index] =
             mimic_joint.multiplier * joint_state.position[mimic_joint.mimicked_joint_index];
+        servo_msg.data[mimic_joint.joint_index] =
+            mimic_joint.multiplier * servo_msg.data[mimic_joint.mimicked_joint_index];
       }
-      else if (interface.name == hardware_interface::HW_IF_VELOCITY)
-      {
-        joint_state.velocity[mimic_joint.joint_index] =
-            mimic_joint.multiplier * joint_state.velocity[mimic_joint.mimicked_joint_index];
-      }
-      else if (interface.name == hardware_interface::HW_IF_EFFORT)
-      {
-        joint_state.effort[mimic_joint.joint_index] =
-            mimic_joint.multiplier * joint_state.effort[mimic_joint.mimicked_joint_index];
-      }
+      // else if (interface.name == hardware_interface::HW_IF_VELOCITY)
+      // {
+      //   joint_state.velocity[mimic_joint.joint_index] =
+      //       mimic_joint.multiplier * joint_state.velocity[mimic_joint.mimicked_joint_index];
+      // }
+      // else if (interface.name == hardware_interface::HW_IF_EFFORT)
+      // {
+      //   joint_state.effort[mimic_joint.joint_index] =
+      //       mimic_joint.multiplier * joint_state.effort[mimic_joint.mimicked_joint_index];
+      // }
     }
   }
 
   if (rclcpp::ok())
   {
-    topic_based_joint_commands_publisher_->publish(joint_state);
+    // topic_based_joint_commands_publisher_->publish(joint_state);
+    latest_joint_state_ = joint_state;
+    topic_based_joint_commands_publisher_->publish(servo_msg);
   }
 
   return hardware_interface::return_type::OK;
 }
-}  // end namespace topic_based_ros2_control
+}  // end namespace servoarm_ros2_control
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(topic_based_ros2_control::TopicBasedSystem, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(servoarm_ros2_control::TopicBasedSystem, hardware_interface::SystemInterface)

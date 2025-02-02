@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(topic_based_ros2_control CXX)
+project(servoarm_ros2_control CXX)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Werror -Wall -Wextra -Wpedantic -Wshadow
@@ -76,7 +76,7 @@ if(BUILD_TESTING)
       HARDWARE_INTERFACE_VERSION_PATCH=${hardware_interface_VERSION_PATCH})
 endif()
 
-pluginlib_export_plugin_description_file(hardware_interface topic_based_ros2_control_plugin_description.xml)
+pluginlib_export_plugin_description_file(hardware_interface servoarm_ros2_control_plugin_description.xml)
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

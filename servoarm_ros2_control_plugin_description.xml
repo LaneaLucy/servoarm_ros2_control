@@ -1,0 +1,9 @@
+<library path="servoarm_ros2_control">
+
+<class name="servoarm_ros2_control/TopicBasedSystem" type="servoarm_ros2_control::TopicBasedSystem" base_class_type="hardware_interface::SystemInterface">
+    <description>
+        A topic based ros2_control hardware interface for servoarm.
+    </description>
+  </class>
+
+</library>

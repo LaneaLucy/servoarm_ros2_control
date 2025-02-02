@@ -47,8 +47,9 @@
 #include <rclcpp/subscription.hpp>
 
 #include <sensor_msgs/msg/joint_state.hpp>
+#include <std_msgs/msg/float32_multi_array.hpp>
 
-namespace topic_based_ros2_control
+namespace servoarm_ros2_control
 {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
@@ -66,8 +67,9 @@ public:
   hardware_interface::return_type write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) override;
 
 private:
-  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_states_subscriber_;
-  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_commands_publisher_;
+  //rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_states_subscriber_;
+  // rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_commands_publisher_;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr topic_based_joint_commands_publisher_;
   rclcpp::Node::SharedPtr node_;
   sensor_msgs::msg::JointState latest_joint_state_;
   bool sum_wrapped_joint_states_{ false };
@@ -99,4 +101,4 @@ private:
                     std::vector<std::vector<double>>& values, std::vector<HandleType>& interfaces);
 };
 
-}  // namespace topic_based_ros2_control
+}  // namespace servoarm_ros2_control
